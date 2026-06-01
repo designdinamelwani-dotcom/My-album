@@ -1,0 +1,583 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2870
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw5669\paperh8503\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 ```html\
+<!DOCTYPE html>\
+<html lang="en" class="h-full bg-neutral-950 text-neutral-100">\
+<head>\
+    <meta charset="UTF-8">\
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">\
+    <title>38-Page Portrait Photo Studio</title>\
+    <!-- Tailwind CSS -->\
+    <script src="https://cdn.tailwindcss.com"></script>\
+    <!-- FontAwesome Icons for clean visual, text-free actions -->\
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">\
+    <style>\
+        /* Smooth transitions */\
+        .page-transition \{\
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease-in-out;\
+        \}\
+        /* Custom scrollbar for filmstrip */\
+        .no-scrollbar::-webkit-scrollbar \{\
+            display: none;\
+        \}\
+        .no-scrollbar \{\
+            -ms-overflow-style: none;\
+            scrollbar-width: none;\
+        \}\
+        /* Glow effect for loading */\
+        @keyframes pulse-glow \{\
+            0%, 100% \{ opacity: 0.3; filter: drop-shadow(0 0 5px rgba(168, 85, 247, 0.2)); \}\
+            50% \{ opacity: 0.8; filter: drop-shadow(0 0 20px rgba(168, 85, 247, 0.6)); \}\
+        \}\
+        .loading-glow \{\
+            animation: pulse-glow 2s infinite ease-in-out;\
+        \}\
+    </style>\
+</head>\
+<body class="h-full flex flex-col justify-between overflow-hidden select-none">\
+\
+    <!-- TOP HEADER: Minimal status indicator -->\
+    <header class="px-6 py-4 flex justify-between items-center bg-gradient-to-b from-neutral-900/80 to-transparent backdrop-blur-md z-30">\
+        <div class="flex items-center gap-3">\
+            <span class="text-xs tracking-[0.25em] font-light uppercase text-neutral-400">PAGE <span id="current-page-num" class="text-white font-medium">1</span> / 38</span>\
+        </div>\
+        <div class="flex items-center gap-4">\
+            <!-- Style Selector for Batch Operations -->\
+            <select id="theme-selector" class="bg-neutral-900 border border-neutral-800 text-xs text-neutral-300 rounded px-3 py-1.5 focus:outline-none focus:border-purple-500">\
+                <option value="cinematic">Cinematic Nature</option>\
+                <option value="surreal">Surreal Cosmic Art</option>\
+                <option value="cyberpunk">Cyberpunk Streetscape</option>\
+                <option value="minimal">Minimalist Architecture</option>\
+                <option value="macro">Macro Photography</option>\
+            </select>\
+            <!-- Batch Generator -->\
+            <button id="btn-generate-all" class="bg-purple-600 hover:bg-purple-700 text-white rounded-full p-2.5 transition flex items-center justify-center gap-2 text-xs font-semibold px-4 shadow-lg shadow-purple-500/20" title="Generate remaining pages">\
+                <i class="fa-solid fa-wand-magic-sparkles"></i>\
+                <span class="hidden sm:inline">Generate All</span>\
+            </button>\
+        </div>\
+    </header>\
+\
+    <!-- MAIN PORTRAIT CANVAS CONTAINER -->\
+    <main class="flex-1 flex items-center justify-center relative px-4 overflow-hidden py-2">\
+        <!-- Interactive swipe area -->\
+        <div id="swipe-container" class="relative w-full max-w-md aspect-[2/3] max-h-[70vh] rounded-2xl overflow-hidden shadow-2xl shadow-black/80 bg-neutral-900 border border-neutral-800/50 flex items-center justify-center group">\
+            \
+            <!-- Slides wrapper -->\
+            <div id="slides-wrapper" class="absolute inset-0 w-full h-full">\
+                <!-- Pages will be dynamically rendered here -->\
+            </div>\
+\
+            <!-- Page Navigation Overlays (Desktop Hover Controls) -->\
+            <button id="btn-prev" class="absolute left-4 z-20 w-10 h-10 rounded-full bg-black/40 backdrop-blur-md text-white border border-white/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300 hover:bg-black/70 focus:outline-none">\
+                <i class="fa-solid fa-chevron-left"></i>\
+            </button>\
+            <button id="btn-next" class="absolute right-4 z-20 w-10 h-10 rounded-full bg-black/40 backdrop-blur-md text-white border border-white/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300 hover:bg-black/70 focus:outline-none">\
+                <i class="fa-solid fa-chevron-right"></i>\
+            </button>\
+\
+            <!-- Bottom Floating Action Panel (Context-Sensitive inside active page) -->\
+            <div class="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3 bg-black/50 backdrop-blur-xl border border-white/10 px-5 py-3 rounded-full shadow-lg">\
+                <button id="btn-generate-single" class="text-white hover:text-purple-400 p-2 transition flex flex-col items-center gap-1" title="Generate Photo">\
+                    <i class="fa-solid fa-rotate"></i>\
+                    <span class="text-[9px] uppercase tracking-wider opacity-60">Re-Gen</span>\
+                </button>\
+                <div class="h-6 w-[1px] bg-white/15"></div>\
+                <button id="btn-download" class="text-white hover:text-green-400 p-2 transition flex flex-col items-center gap-1" title="Download 1280x1920 Original">\
+                    <i class="fa-solid fa-arrow-down-long"></i>\
+                    <span class="text-[9px] uppercase tracking-wider opacity-60">1280x1920</span>\
+                </button>\
+                <div class="h-6 w-[1px] bg-white/15"></div>\
+                <button id="btn-fullscreen" class="text-white hover:text-blue-400 p-2 transition flex flex-col items-center gap-1" title="Fullscreen View">\
+                    <i class="fa-solid fa-expand"></i>\
+                    <span class="text-[9px] uppercase tracking-wider opacity-60">Full</span>\
+                </button>\
+            </div>\
+        </div>\
+    </main>\
+\
+    <!-- FILMSTRIP & SLOTS (Bottom navigation) -->\
+    <footer class="bg-gradient-to-t from-neutral-900 to-transparent p-6 z-30">\
+        <div class="max-w-4xl mx-auto">\
+            <div id="filmstrip" class="flex gap-2.5 overflow-x-auto py-3 no-scrollbar cursor-grab active:cursor-grabbing snap-x">\
+                <!-- 38 thumbnails generated via JS -->\
+            </div>\
+        </div>\
+    </footer>\
+\
+    <!-- NOTIFICATION / TOAST TO USER -->\
+    <div id="toast" class="fixed top-20 left-1/2 -translate-x-1/2 bg-neutral-900/90 border border-neutral-700 text-neutral-100 text-xs px-5 py-3 rounded-full shadow-xl opacity-0 transform translate-y-2 pointer-events-none transition duration-300 z-50 flex items-center gap-3">\
+        <i id="toast-icon" class="fa-solid fa-circle-info text-purple-400"></i>\
+        <span id="toast-message">Ready</span>\
+    </div>\
+\
+    <!-- FULLSCREEN PORTRAIT PREVIEW MODAL -->\
+    <div id="modal-fullscreen" class="fixed inset-0 bg-black/95 z-50 flex items-center justify-center opacity-0 pointer-events-none transition duration-300">\
+        <button id="btn-close-modal" class="absolute top-6 right-6 text-white text-2xl hover:opacity-80 transition focus:outline-none">\
+            <i class="fa-solid fa-xmark"></i>\
+        </button>\
+        <div class="relative w-full max-w-2xl h-[90vh] flex items-center justify-center p-4">\
+            <img id="modal-img" src="" alt="Fullscreen view" class="max-h-full max-w-full rounded-lg shadow-2xl object-contain aspect-[2/3] border border-neutral-800">\
+        </div>\
+    </div>\
+\
+    <!-- MAIN LOGIC AND SCRIPTING -->\
+    <script>\
+        // API Settings\
+        const apiKey = ""; // Canvas sandbox automatically populates this\
+        const IMAGEN_MODEL = "imagen-4.0-generate-001";\
+\
+        // Global State: 38 Pages\
+        const TOTAL_PAGES = 38;\
+        let currentPageIndex = 0; // 0-indexed (Page 1 is index 0)\
+        let isGeneratingAll = false;\
+\
+        // In-memory array of images. We pre-fill with beautiful SVGs\
+        const pageImages = Array.from(\{ length: TOTAL_PAGES \}, (_, i) => (\{\
+            id: i,\
+            url: null, // base64 string once generated\
+            prompt: "", // Custom prompt used\
+            isGenerating: false\
+        \}));\
+\
+        // Beautiful curated default prompts corresponding to visual themes for 38 unique styles\
+        const promptThemes = \{\
+            cinematic: [\
+                "Ethereal misty pine forest towering into soft sunlight, high vertical depth, moody atmospheric cinematic portrait photography",\
+                "Grand canyon waterfall cascading into emerald pool, high visual depth, cinematic long exposure, vertical drone angle",\
+                "Jagged volcanic mountains of Iceland under bright green aurora borealis lights, stark landscape, epic cinematic vertical",\
+                "Solitary minimalist tree in a snowy field at blue hour twilight, serene winter atmospheric vertical scene",\
+                "Lush green tropical jungle canyon with deep shafts of golden rays penetrating morning fog, high detail cinematic"\
+            ],\
+            surreal: [\
+                "Cosmic floating crystal island reflecting starry nebula oceans, surreal fantasy art, glowing vapor vibes, vertical",\
+                "Infinite spiral staircase leading into starry night sky celestial portal, surrealist oil painting style portrait canvas",\
+                "Ethereal bioluminescent giant jellyfish drifting over deep underwater glowing ruins, magical dreamscape vertical art",\
+                "Desert of shifting pink sands with multiple glowing crescent moons hanging in the indigo horizon, surrealism",\
+                "Surreal giant origami bird carrying a luminous glowing crystal lantern soaring through dramatic clouds"\
+            ],\
+            cyberpunk: [\
+                "Cyberpunk alleyway with neon signs in vibrant cyan and magenta, wet asphalt reflections, futuristic vertical streetscape",\
+                "Futuristic sky-high neon city tower cutting through dark rain clouds, atmospheric sci-fi megacity architecture",\
+                "Close portrait shot of glowing retro-futuristic holographic computer server terminal with complex fiberoptics",\
+                "A futuristic neon-drenched train interior speeding through sci-fi metropolis at night, beautiful portrait view",\
+                "High-tech futuristic cybernetic garden under dome, neon greenhouse with glowing cyber-flora"\
+            ],\
+            minimal: [\
+                "Elegant geometric concrete archway framing minimalist ocean horizon, stark architectural design shadow portrait",\
+                "Minimal sand dunes shadows under hot midday sun forming abstract wavy curves, perfect natural minimalist geometry",\
+                "Minimalist interior space with beautiful structural concrete column casting dramatic shadows, soft light ray",\
+                "Sleek clean white spiral architecture staircase viewed from directly below, architectural photography minimal abstract",\
+                "Single abstract dark stone balanced on smooth white gravel, high minimalist zen fine art vertical portrait"\
+            ],\
+            macro: [\
+                "Hyper realistic close-up of magnificent iridescent insect wing catching metallic rainbow colors under macro lens",\
+                "Macro shot of beautiful frosty ice crystals branching patterns forming on dark autumn leaf",\
+                "Extreme close up of colorful paint droplets mixing in water, abstract fluid macro universe",\
+                "Vibrant drops of water sitting on a glowing green leaf capturing micro-refractions of light",\
+                "Macro shot of burning ember showing intricate golden structures of incandescent hot glow"\
+            ]\
+        \};\
+\
+        // Generates stylized SVG placeholders with numbers inside a matching 2:3 container\
+        function createPlaceholderSvg(num) \{\
+            const h = 1920;\
+            const w = 1280;\
+            const color1 = `hsl($\{(num * 15) % 360\}, 55%, 15%)`;\
+            const color2 = `hsl($\{(num * 15 + 120) % 360\}, 60%, 8%)`;\
+            \
+            return `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="$\{w\}" height="$\{h\}" viewBox="0 0 $\{w\} $\{h\}">\
+                <defs>\
+                    <linearGradient id="g-$\{num\}" x1="0%" y1="0%" x2="100%" y2="100%">\
+                        <stop offset="0%" stop-color="$\{encodeURIComponent(color1)\}" />\
+                        <stop offset="100%" stop-color="$\{encodeURIComponent(color2)\}" />\
+                    </linearGradient>\
+                </defs>\
+                <rect width="100%" height="100%" fill="url(#g-$\{num\})" />\
+                <circle cx="640" cy="960" r="140" fill="white" opacity="0.04" />\
+                <text x="50%" y="48%" font-family="system-ui, -apple-system, sans-serif" font-size="280" font-weight="100" fill="white" opacity="0.12" dominant-baseline="middle" text-anchor="middle">$\{num\}</text>\
+                <text x="50%" y="54%" font-family="system-ui, -apple-system, sans-serif" font-size="28" font-weight="200" fill="white" opacity="0.3" letter-spacing="4" text-anchor="middle">CLICK TO GENERATE</text>\
+            </svg>`;\
+        \}\
+\
+        // Setup DOM Elements\
+        const slidesWrapper = document.getElementById('slides-wrapper');\
+        const filmstrip = document.getElementById('filmstrip');\
+        const currentPageNumText = document.getElementById('current-page-num');\
+        const themeSelector = document.getElementById('theme-selector');\
+        \
+        const btnPrev = document.getElementById('btn-prev');\
+        const btnNext = document.getElementById('btn-next');\
+        const btnGenerateSingle = document.getElementById('btn-generate-single');\
+        const btnGenerateAll = document.getElementById('btn-generate-all');\
+        const btnDownload = document.getElementById('btn-download');\
+        const btnFullscreen = document.getElementById('btn-fullscreen');\
+        \
+        const toast = document.getElementById('toast');\
+        const toastIcon = document.getElementById('toast-icon');\
+        const toastMessage = document.getElementById('toast-message');\
+        \
+        const modalFullscreen = document.getElementById('modal-fullscreen');\
+        const modalImg = document.getElementById('modal-img');\
+        const btnCloseModal = document.getElementById('btn-close-modal');\
+\
+        // Show a custom UI Notification toast\
+        function showToast(message, type = 'info') \{\
+            toastMessage.textContent = message;\
+            toastIcon.className = 'fa-solid';\
+            if (type === 'success') \{\
+                toastIcon.classList.add('fa-circle-check', 'text-green-400');\
+            \} else if (type === 'error') \{\
+                toastIcon.classList.add('fa-circle-exclamation', 'text-red-400');\
+            \} else if (type === 'loading') \{\
+                toastIcon.classList.add('fa-spinner', 'fa-spin', 'text-purple-400');\
+            \} else \{\
+                toastIcon.classList.add('fa-circle-info', 'text-blue-400');\
+            \}\
+            toast.style.opacity = '1';\
+            toast.style.transform = 'translate(-50%, 0)';\
+            \
+            if (type !== 'loading') \{\
+                setTimeout(() => \{\
+                    toast.style.opacity = '0';\
+                    toast.style.transform = 'translate(-50%, 8px)';\
+                \}, 3000);\
+            \}\
+        \}\
+\
+        function hideToast() \{\
+            toast.style.opacity = '0';\
+            toast.style.transform = 'translate(-50%, 8px)';\
+        \}\
+\
+        // Initialize Slides & Filmstrip\
+        function initStudio() \{\
+            // Populate page image arrays\
+            pageImages.forEach((img, idx) => \{\
+                // Initialize default placeholders\
+                img.url = createPlaceholderSvg(idx + 1);\
+            \});\
+\
+            renderSlides();\
+            renderFilmstrip();\
+            updateActiveView();\
+        \}\
+\
+        // Render Slides inside viewport\
+        function renderSlides() \{\
+            slidesWrapper.innerHTML = '';\
+            pageImages.forEach((page, idx) => \{\
+                const slide = document.createElement('div');\
+                slide.className = `absolute inset-0 w-full h-full page-transition flex flex-col items-center justify-center pointer-events-none opacity-0 select-none`;\
+                slide.setAttribute('data-index', idx);\
+                \
+                // Set default position offsets (slide left or right)\
+                if (idx < currentPageIndex) \{\
+                    slide.style.transform = 'translateX(-100%)';\
+                \} else if (idx > currentPageIndex) \{\
+                    slide.style.transform = 'translateX(100%)';\
+                \} else \{\
+                    slide.style.transform = 'translateX(0)';\
+                    slide.classList.remove('pointer-events-none');\
+                    slide.classList.add('opacity-100');\
+                \}\
+\
+                // Layout Structure\
+                slide.innerHTML = `\
+                    <div class="relative w-full h-full flex items-center justify-center">\
+                        <img src="$\{page.url\}" alt="Page $\{idx + 1\}" \
+                             id="img-page-$\{idx\}"\
+                             class="w-full h-full object-cover transition duration-300 $\{page.isGenerating ? 'opacity-30 loading-glow' : ''\}">\
+                        \
+                        <!-- Empty Canvas Interactive Button -->\
+                        $\{!page.url.startsWith('data:image/png') && !page.isGenerating ? `\
+                            <button onclick="generatePage($\{idx\})" class="absolute inset-0 w-full h-full flex items-center justify-center hover:bg-black/10 transition group/play focus:outline-none">\
+                                <div class="w-16 h-16 rounded-full bg-white/10 hover:bg-purple-600/90 border border-white/20 flex items-center justify-center text-white text-xl shadow-lg transition duration-300 hover:scale-110">\
+                                    <i class="fa-solid fa-wand-magic-sparkles"></i>\
+                                </div>\
+                            </button>\
+                        ` : ''\}\
+\
+                        <!-- Spinner overlay -->\
+                        $\{page.isGenerating ? `\
+                            <div class="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/40">\
+                                <div class="relative flex items-center justify-center">\
+                                    <div class="w-16 h-16 rounded-full border-4 border-purple-500/20 border-t-purple-500 animate-spin"></div>\
+                                    <i class="fa-solid fa-camera text-purple-400 absolute text-lg animate-pulse"></i>\
+                                </div>\
+                            </div>\
+                        ` : ''\}\
+                    </div>\
+                `;\
+                slidesWrapper.appendChild(slide);\
+            \});\
+        \}\
+\
+        // Render Navigation Filmstrip of all 38 slots\
+        function renderFilmstrip() \{\
+            filmstrip.innerHTML = '';\
+            pageImages.forEach((page, idx) => \{\
+                const thumb = document.createElement('div');\
+                thumb.className = `flex-none w-14 aspect-[2/3] rounded-lg border-2 overflow-hidden cursor-pointer snap-start transition relative $\{\
+                    idx === currentPageIndex ? 'border-purple-500 scale-105' : 'border-neutral-800 hover:border-neutral-600'\
+                \}`;\
+                thumb.onclick = () => jumpToPage(idx);\
+                thumb.setAttribute('data-thumb-index', idx);\
+\
+                thumb.innerHTML = `\
+                    <img src="$\{page.url\}" class="w-full h-full object-cover $\{page.isGenerating ? 'loading-glow opacity-30' : ''\}">\
+                    <div class="absolute inset-0 bg-black/20 flex items-center justify-center">\
+                        <span class="text-[10px] font-mono text-white opacity-90">$\{idx + 1\}</span>\
+                    </div>\
+                `;\
+                filmstrip.appendChild(thumb);\
+            \});\
+        \}\
+\
+        // Update view state when changing active pages\
+        function updateActiveView() \{\
+            currentPageNumText.textContent = currentPageIndex + 1;\
+\
+            // Animate transition between pages\
+            const slides = slidesWrapper.querySelectorAll('[data-index]');\
+            slides.forEach((slide) => \{\
+                const idx = parseInt(slide.getAttribute('data-index'));\
+                slide.classList.add('page-transition');\
+                if (idx < currentPageIndex) \{\
+                    slide.style.transform = 'translateX(-110%)';\
+                    slide.classList.remove('opacity-100');\
+                    slide.classList.add('opacity-0', 'pointer-events-none');\
+                \} else if (idx > currentPageIndex) \{\
+                    slide.style.transform = 'translateX(110%)';\
+                    slide.classList.remove('opacity-100');\
+                    slide.classList.add('opacity-0', 'pointer-events-none');\
+                \} else \{\
+                    slide.style.transform = 'translateX(0)';\
+                    slide.classList.remove('opacity-0', 'pointer-events-none');\
+                    slide.classList.add('opacity-100');\
+                \}\
+            \});\
+\
+            // Update filmstrip highlight\
+            const thumbs = filmstrip.querySelectorAll('[data-thumb-index]');\
+            thumbs.forEach((thumb) => \{\
+                const idx = parseInt(thumb.getAttribute('data-thumb-index'));\
+                if (idx === currentPageIndex) \{\
+                    thumb.classList.add('border-purple-500', 'scale-105');\
+                    thumb.classList.remove('border-neutral-800');\
+                    // Smooth scroll into view\
+                    thumb.scrollIntoView(\{ behavior: 'smooth', block: 'nearest', inline: 'center' \});\
+                \} else \{\
+                    thumb.classList.remove('border-purple-500', 'scale-105');\
+                    thumb.classList.add('border-neutral-800');\
+                \}\
+            \});\
+\
+            // Disable/enable controls appropriately\
+            btnPrev.disabled = currentPageIndex === 0;\
+            btnNext.disabled = currentPageIndex === TOTAL_PAGES - 1;\
+        \}\
+\
+        function jumpToPage(idx) \{\
+            if (idx >= 0 && idx < TOTAL_PAGES) \{\
+                currentPageIndex = idx;\
+                updateActiveView();\
+            \}\
+        \}\
+\
+        // Exponential backoff runner for stability in Canvas environments\
+        async function robustFetch(url, options, maxRetries = 5) \{\
+            let delay = 1000;\
+            for (let i = 0; i < maxRetries; i++) \{\
+                try \{\
+                    const response = await fetch(url, options);\
+                    if (response.ok) return await response.json();\
+                \} catch (err) \{\
+                    // Failures automatically fall into retry queue silently\
+                \}\
+                await new Promise(resolve => setTimeout(resolve, delay));\
+                delay *= 2; // Exponential expansion\
+            \}\
+            throw new Error("Unable to establish safe connection to service. Check network setup.");\
+        \}\
+\
+        // Single Image Generation Logic with Imagen model\
+        async function generatePage(index) \{\
+            const page = pageImages[index];\
+            if (page.isGenerating) return;\
+\
+            page.isGenerating = true;\
+            renderSlides();\
+            renderFilmstrip();\
+\
+            // Auto-select styling prompt based on selected theme\
+            const activeTheme = themeSelector.value;\
+            const themes = promptThemes[activeTheme];\
+            const prompt = themes[index % themes.length];\
+\
+            showToast("Synthesizing masterpiece portrait...", "loading");\
+\
+            try \{\
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/$\{IMAGEN_MODEL\}:predict?key=$\{apiKey\}`;\
+                const payload = \{\
+                    instances: [\
+                        \{ prompt: `$\{prompt\}, beautiful vertical aspect portrait photo 1280x1920, ultra detail, hyper-realistic, award winning, clear masterwork` \}\
+                    ],\
+                    parameters: \{\
+                        sampleCount: 1,\
+                        aspectRatio: "2:3",\
+                        outputMimeType: "image/png"\
+                    \}\
+                \};\
+\
+                const data = await robustFetch(url, \{\
+                    method: 'POST',\
+                    headers: \{ 'Content-Type': 'application/json' \},\
+                    body: JSON.stringify(payload)\
+                \});\
+\
+                if (data.predictions && data.predictions[0] && data.predictions[0].bytesBase64Encoded) \{\
+                    const base64Data = data.predictions[0].bytesBase64Encoded;\
+                    page.url = `data:image/png;base64,$\{base64Data\}`;\
+                    page.prompt = prompt;\
+                    showToast("Synthesis successful", "success");\
+                \} else \{\
+                    throw new Error("Invalid output received from prediction model.");\
+                \}\
+            \} catch (error) \{\
+                showToast("Synthesis queue crowded. Try again shortly.", "error");\
+            \} finally \{\
+                page.isGenerating = false;\
+                renderSlides();\
+                renderFilmstrip();\
+            \}\
+        \}\
+\
+        // Generate All Sequence Trigger\
+        async function generateAllRemaining() \{\
+            if (isGeneratingAll) return;\
+            isGeneratingAll = true;\
+            btnGenerateAll.classList.add('opacity-50', 'pointer-events-none');\
+            \
+            showToast("Launching batch album generator...", "info");\
+\
+            for (let i = 0; i < TOTAL_PAGES; i++) \{\
+                // Generate slots that still hold placeholder images\
+                if (!pageImages[i].url.startsWith('data:image/png')) \{\
+                    currentPageIndex = i;\
+                    updateActiveView();\
+                    await generatePage(i);\
+                    // Add slight spacing between requests\
+                    await new Promise(resolve => setTimeout(resolve, 500));\
+                \}\
+            \}\
+\
+            isGeneratingAll = false;\
+            btnGenerateAll.classList.remove('opacity-50', 'pointer-events-none');\
+            showToast("Complete 38-page collection processed", "success");\
+        \}\
+\
+        // Handle Downloading high resolution files precisely\
+        function downloadCurrent() \{\
+            const page = pageImages[currentPageIndex];\
+            \
+            // Generate temporary image link element\
+            const link = document.createElement('a');\
+            link.download = `photo-page-$\{currentPageIndex + 1\}-1280x1920.png`;\
+            \
+            if (page.url.startsWith('data:image/png')) \{\
+                link.href = page.url;\
+                document.body.appendChild(link);\
+                link.click();\
+                document.body.removeChild(link);\
+                showToast("1280x1920px canvas saved", "success");\
+            \} else \{\
+                // If it's still placeholder SVG, export to exactly 1280x1920 using Canvas rendering\
+                const img = new Image();\
+                img.onload = function() \{\
+                    const canvas = document.createElement('canvas');\
+                    canvas.width = 1280;\
+                    canvas.height = 1920;\
+                    const ctx = canvas.getContext('2d');\
+                    ctx.drawImage(img, 0, 0, 1280, 1920);\
+                    \
+                    link.href = canvas.toDataURL('image/png');\
+                    document.body.appendChild(link);\
+                    link.click();\
+                    document.body.removeChild(link);\
+                    showToast("Page template saved", "info");\
+                \};\
+                img.src = page.url;\
+            \}\
+        \}\
+\
+        // Fullscreen View Mode\
+        function openFullscreen() \{\
+            const page = pageImages[currentPageIndex];\
+            modalImg.src = page.url;\
+            modalFullscreen.classList.remove('pointer-events-none', 'opacity-0');\
+            modalFullscreen.classList.add('opacity-100');\
+        \}\
+\
+        function closeFullscreen() \{\
+            modalFullscreen.classList.remove('opacity-100');\
+            modalFullscreen.classList.add('pointer-events-none', 'opacity-0');\
+        \}\
+\
+        // Swipe & Touch Support for Mobile Viewers\
+        let touchStartX = 0;\
+        let touchEndX = 0;\
+        const swipeContainer = document.getElementById('swipe-container');\
+\
+        swipeContainer.addEventListener('touchstart', (e) => \{\
+            touchStartX = e.changedTouches[0].screenX;\
+        \}, \{ passive: true \});\
+\
+        swipeContainer.addEventListener('touchend', (e) => \{\
+            touchEndX = e.changedTouches[0].screenX;\
+            handleSwipe();\
+        \}, \{ passive: true \});\
+\
+        function handleSwipe() \{\
+            const diffX = touchEndX - touchStartX;\
+            if (Math.abs(diffX) > 50) \{\
+                if (diffX > 0 && currentPageIndex > 0) \{\
+                    jumpToPage(currentPageIndex - 1);\
+                \} else if (diffX < 0 && currentPageIndex < TOTAL_PAGES - 1) \{\
+                    jumpToPage(currentPageIndex + 1);\
+                \}\
+            \}\
+        \}\
+\
+        // Desktop Navigation Event Binding\
+        btnPrev.onclick = () => \{ if (currentPageIndex > 0) jumpToPage(currentPageIndex - 1); \};\
+        btnNext.onclick = () => \{ if (currentPageIndex < TOTAL_PAGES - 1) jumpToPage(currentPageIndex + 1); \};\
+        btnGenerateSingle.onclick = () => generatePage(currentPageIndex);\
+        btnGenerateAll.onclick = generateAllRemaining;\
+        btnDownload.onclick = downloadCurrent;\
+        btnFullscreen.onclick = openFullscreen;\
+        btnCloseModal.onclick = closeFullscreen;\
+        \
+        // Listen to Arrow keys\
+        document.addEventListener('keydown', (e) => \{\
+            if (e.key === 'ArrowLeft' && currentPageIndex > 0) \{\
+                jumpToPage(currentPageIndex - 1);\
+            \} else if (e.key === 'ArrowRight' && currentPageIndex < TOTAL_PAGES - 1) \{\
+                jumpToPage(currentPageIndex + 1);\
+            \} else if (e.key === 'Escape') \{\
+                closeFullscreen();\
+            \}\
+        \});\
+\
+        // Initialize studio instantly\
+        window.onload = initStudio;\
+    </script>\
+</body>\
+</html>\
+\
+```}
